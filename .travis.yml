@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t frenchriera/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run frenchriera/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t frenchriera/multi-client ./client
+  - docker build -t frenchriera/multi-nginx ./nginx
+  - docker build -t frenchriera/multi-server ./server
+  - docker build -t frenchriera/multi-worker ./worker
+  #login into docker hub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #PUSH images
+  - docker push frenchriera/multi-client
+  - docker push frenchriera/multi-nginx
+  - docker push frenchriera/multi-server
+  - docker push frenchriera/multi-worker
